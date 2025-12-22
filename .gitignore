@@ -65,6 +65,9 @@ __pycache__/
 *.key
 secrets/
 
+# Local configuration
+hooks/config.local.sh
+
 # Test/Coverage
 /coverage/
 htmlcov/

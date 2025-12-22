@@ -1,0 +1,714 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025 Jonathan D.A. Jewell
+= chicxulub--ssg Cookbook
+:toc: left
+:toclevels: 3
+:sectnums:
+:icons: font
+:source-highlighter: rouge
+
+Comprehensive recipes for building, testing, and managing the SSG satellite.
+
+== Quick Reference
+
+[cols="1,2,2"]
+|===
+|Task |Just Command |CLI Equivalent
+
+|Build
+|`just build`
+|`deno check adapters/*.js`
+
+|Test
+|`just test`
+|`deno test --allow-all tests/`
+
+|Lint
+|`just lint`
+|`deno lint adapters/*.js`
+
+|Format
+|`just fmt`
+|`deno fmt adapters/*.js`
+
+|Full QA
+|`just qa`
+|`just lint && just fmt-check && just check`
+|===
+
+[[cli]]
+== CLI Recipes
+
+Command-line recipes for direct execution without Just.
+
+[[cli-deno]]
+=== Deno Commands
+
+==== Check Syntax
+[source,bash]
+----
+# Check all adapters
+deno check adapters/*.js
+
+# Check specific adapter
+deno check adapters/zola.js
+----
+
+==== Run Tests
+[source,bash]
+----
+# All tests
+deno test --allow-all tests/
+
+# With coverage
+deno test --allow-all --coverage=coverage/ tests/
+deno coverage coverage/
+
+# Watch mode
+deno test --allow-all --watch tests/
+
+# Specific test file
+deno test --allow-all tests/adapters/zola_test.js
+
+# With timeout for e2e
+deno test --allow-all --timeout=600000 tests/e2e/
+----
+
+==== Linting & Formatting
+[source,bash]
+----
+# Lint
+deno lint adapters/*.js
+
+# Format
+deno fmt adapters/*.js
+
+# Check format (no changes)
+deno fmt --check adapters/*.js
+----
+
+==== Cache Management
+[source,bash]
+----
+# Reload cache
+deno cache --reload adapters/*.js
+
+# Info about dependencies
+deno info adapters/zola.js
+----
+
+[[cli-git]]
+=== Git Commands
+
+==== Branch Management
+[source,bash]
+----
+# Create feature branch
+git checkout -b feat/new-adapter
+
+# Create fix branch
+git checkout -b fix/issue-123
+
+# Sync with main
+git fetch origin main
+git rebase origin/main
+----
+
+==== Conventional Commits
+[source,bash]
+----
+# Feature commit
+git commit -m "feat(adapters): add new SSG adapter"
+
+# Fix commit
+git commit -m "fix(zola): correct build path handling"
+
+# Docs commit
+git commit -m "docs(readme): update installation instructions"
+
+# Security commit
+git commit -m "security(deps): update vulnerable dependency"
+----
+
+==== Signed Commits
+[source,bash]
+----
+# Enable signing
+git config commit.gpgsign true
+
+# Signed commit
+git commit -S -m "feat: signed feature"
+----
+
+[[cli-gh]]
+=== GitHub CLI Commands
+
+==== Pull Requests
+[source,bash]
+----
+# Create PR
+gh pr create --title "feat: new adapter" --body "Description"
+
+# Check PR status
+gh pr checks
+
+# View PR
+gh pr view
+
+# Merge PR
+gh pr merge --squash
+----
+
+==== Issues
+[source,bash]
+----
+# Create issue
+gh issue create --title "Bug: description" --label bug
+
+# List issues
+gh issue list
+
+# Close issue
+gh issue close 123
+----
+
+==== Security
+[source,bash]
+----
+# View security alerts
+gh api repos/{owner}/{repo}/code-scanning/alerts
+
+# Create security advisory
+gh api repos/{owner}/{repo}/security-advisories -X POST
+----
+
+[[cli-container]]
+=== Container Commands
+
+==== Podman/Docker
+[source,bash]
+----
+# Build image
+podman build -t chicxulub-ssg:latest .
+
+# Run container
+podman run --rm -it chicxulub-ssg:latest
+
+# Run with volume mount
+podman run --rm -v $(pwd):/app chicxulub-ssg:latest just test
+
+# Multi-arch build
+podman build --platform linux/amd64,linux/arm64 -t chicxulub-ssg:latest .
+----
+
+[[nickel]]
+== Nickel Formulae
+
+Configuration and validation using Nickel language.
+
+[[nickel-adapter]]
+=== Adapter Configuration
+
+[source,nickel]
+----
+# adapter-config.ncl
+{
+  # Adapter metadata schema
+  AdapterMeta = {
+    name | String,
+    language | String,
+    description | String,
+    version | String | optional,
+    homepage | String | optional,
+  },
+
+  # Tool schema
+  Tool = {
+    name | String,
+    description | String,
+    inputSchema | { type | String, properties | Dyn, required | Array String | optional },
+    execute | Dyn,
+  },
+
+  # Full adapter schema
+  Adapter = {
+    meta | AdapterMeta,
+    tools | Array Tool,
+    connect | Dyn,
+    disconnect | Dyn,
+    isConnected | Dyn,
+  },
+}
+----
+
+[[nickel-validation]]
+=== Validation Rules
+
+[source,nickel]
+----
+# validation.ncl
+let Validation = {
+  # Ensure adapter has required exports
+  hasRequiredExports = fun adapter =>
+    std.record.has_field "name" adapter
+    && std.record.has_field "language" adapter
+    && std.record.has_field "tools" adapter,
+
+  # Validate tool schema
+  validToolSchema = fun tool =>
+    std.record.has_field "name" tool
+    && std.record.has_field "description" tool
+    && std.record.has_field "inputSchema" tool,
+
+  # Check SPDX header presence
+  hasSpdxHeader = fun content =>
+    std.string.contains "SPDX-License-Identifier" content,
+}
+in Validation
+----
+
+[[nickel-cicd]]
+=== CI/CD Configuration
+
+[source,nickel]
+----
+# cicd-config.ncl
+{
+  Pipeline = {
+    stages | Array String = ["lint", "test", "build", "deploy"],
+
+    jobs = {
+      lint = {
+        runs-on = "ubuntu-latest",
+        steps = [
+          { uses = "actions/checkout@v4" },
+          { run = "deno lint adapters/*.js" },
+        ],
+      },
+      test = {
+        runs-on = "ubuntu-latest",
+        needs = ["lint"],
+        steps = [
+          { uses = "actions/checkout@v4" },
+          { run = "deno test --allow-all tests/" },
+        ],
+      },
+    },
+  },
+}
+----
+
+[[nickel-hooks]]
+=== Hook Configuration
+
+[source,nickel]
+----
+# hooks.ncl
+{
+  Hooks = {
+    pre-commit = {
+      enabled = true,
+      commands = [
+        "deno fmt --check adapters/*.js",
+        "deno lint adapters/*.js",
+      ],
+      fail-fast = true,
+    },
+
+    pre-push = {
+      enabled = true,
+      commands = [
+        "deno test --allow-all tests/",
+      ],
+      timeout = "5m",
+    },
+
+    post-merge = {
+      enabled = true,
+      commands = [
+        "deno cache --reload adapters/*.js",
+      ],
+    },
+  },
+}
+----
+
+[[just]]
+== Just Recipes
+
+Comprehensive justfile recipes organized by category.
+
+[[just-setup]]
+=== Setup Recipes
+
+[source,just]
+----
+# Initial project setup
+setup:
+    @echo "Setting up development environment..."
+    deno cache --reload adapters/*.js
+    @echo "Setup complete!"
+
+# Install dependencies
+install-deps:
+    @command -v deno >/dev/null || (echo "Install Deno first" && exit 1)
+
+# Verify environment
+doctor:
+    @echo -n "Deno: " && deno --version | head -1
+    @echo -n "Git: " && git --version
+    @echo -n "Just: " && just --version
+----
+
+[[just-build]]
+=== Build Recipes
+
+[source,just]
+----
+# Build all
+build:
+    deno check adapters/*.js
+
+# Check types and lint
+check:
+    deno check adapters/*.js
+    deno lint adapters/*.js
+    deno fmt --check adapters/*.js
+
+# Compile specific adapter
+compile adapter:
+    deno check adapters/{{adapter}}.js
+----
+
+[[just-test]]
+=== Test Recipes
+
+[source,just]
+----
+# All tests
+test:
+    deno test --allow-all tests/
+
+# Unit tests only
+test-unit:
+    deno test --allow-all tests/unit/
+
+# E2E tests
+test-e2e:
+    deno test --allow-all --timeout=600000 tests/e2e/
+
+# Specific adapter
+test-adapter adapter:
+    deno test --allow-all tests/adapters/{{adapter}}_test.js
+
+# With coverage
+test-coverage:
+    deno test --allow-all --coverage=coverage/ tests/
+    deno coverage coverage/
+----
+
+[[just-quality]]
+=== Quality Recipes
+
+[source,just]
+----
+# Lint code
+lint:
+    deno lint adapters/*.js
+
+# Format code
+fmt:
+    deno fmt adapters/*.js
+
+# Check format
+fmt-check:
+    deno fmt --check adapters/*.js
+
+# Full QA
+qa: lint fmt-check check
+    @echo "All checks passed!"
+----
+
+[[just-adapter]]
+=== Adapter Recipes
+
+[source,just]
+----
+# List adapters
+list-adapters:
+    @ls -1 adapters/*.js | sed 's|adapters/||' | sed 's|\.js||'
+
+# Count adapters
+count-adapters:
+    @echo -n "Total: " && ls -1 adapters/*.js | wc -l
+
+# Sync from hub
+sync-adapters:
+    ~/Documents/scripts/transfer-ssg-adapters.sh --satellite chicxulub--ssg
+
+# Verify adapter
+verify-adapter adapter:
+    deno eval "import * as a from './adapters/{{adapter}}.js'; \
+        console.log('Name:', a.name); \
+        console.log('Language:', a.language); \
+        console.log('Tools:', a.tools.length);"
+----
+
+[[just-git]]
+=== Git Recipes
+
+[source,just]
+----
+# Status
+status:
+    git status -sb
+
+# Feature branch
+feature name:
+    git checkout -b feat/{{name}}
+
+# Fix branch
+fix name:
+    git checkout -b fix/{{name}}
+
+# Conventional commit
+commit type scope message:
+    git commit -m "{{type}}({{scope}}): {{message}}"
+----
+
+[[just-security]]
+=== Security Recipes
+
+[source,just]
+----
+# Security audit
+audit:
+    deno lint --rules-exclude=no-explicit-any adapters/*.js
+
+# Secrets scan
+secrets-scan:
+    @grep -rn "password\|secret\|api.key" --include="*.js" adapters/ || echo "Clean"
+----
+
+[[just-cicd]]
+=== CI/CD Recipes
+
+[source,just]
+----
+# Run CI locally
+ci: qa test
+    @echo "CI passed!"
+
+# Pre-commit
+pre-commit: fmt lint check
+
+# Pre-push
+pre-push: qa test
+
+# Release prep
+release-prep version:
+    @echo "Preparing {{version}}..."
+    @echo "1. Update STATE.scm"
+    @echo "2. Update CHANGELOG.md"
+    @echo "3. Run: just ci"
+    @echo "4. Tag: git tag v{{version}}"
+----
+
+[[combinatorics]]
+== CLI Combinatorics
+
+Common command combinations and permutations.
+
+[[combinatorics-dev]]
+=== Development Workflow
+
+[source,bash]
+----
+# Quick iteration cycle
+just fmt && just lint && just test
+
+# Full validation before commit
+just qa && just test && git add -A && git commit -m "feat: changes"
+
+# Watch and test
+just watch &
+# ... make changes ...
+fg  # bring back to foreground
+
+# Test single adapter end-to-end
+just verify-adapter zola && just test-adapter zola
+----
+
+[[combinatorics-release]]
+=== Release Workflow
+
+[source,bash]
+----
+# Full release preparation
+just ci && \
+  just test-coverage && \
+  just docs && \
+  git tag -a v1.0.0 -m "Release 1.0.0" && \
+  git push origin main --tags
+
+# Hotfix workflow
+git checkout -b hotfix/critical-fix && \
+  # ... make fix ... && \
+  just ci && \
+  git checkout main && \
+  git merge hotfix/critical-fix && \
+  git tag -a v1.0.1 -m "Hotfix 1.0.1"
+----
+
+[[combinatorics-adapter]]
+=== Adapter Management
+
+[source,bash]
+----
+# Full adapter verification
+for adapter in $(just list-adapters); do
+  echo "Verifying $adapter..."
+  just verify-adapter $adapter
+done
+
+# Parallel adapter testing (with GNU parallel)
+just list-adapters | parallel -j4 just test-adapter {}
+
+# Sync and verify
+just sync-adapters && just count-adapters && just test
+----
+
+[[combinatorics-debug]]
+=== Debugging
+
+[source,bash]
+----
+# Verbose test output
+DENO_VERBOSE=1 deno test --allow-all tests/
+
+# Debug specific adapter
+deno eval "
+  import * as adapter from './adapters/zola.js';
+  console.log(JSON.stringify(adapter.tools, null, 2));
+"
+
+# Trace command execution
+DENO_TRACE=1 deno run --allow-all adapters/zola.js
+----
+
+[[concatenations]]
+== Pipeline Concatenations
+
+Common command pipelines.
+
+[[concatenations-quality]]
+=== Quality Pipelines
+
+[source,bash]
+----
+# Format -> Lint -> Test -> Build
+deno fmt adapters/*.js && \
+deno lint adapters/*.js && \
+deno test --allow-all tests/ && \
+deno check adapters/*.js
+
+# With error handling
+deno fmt adapters/*.js || exit 1
+deno lint adapters/*.js || exit 1
+deno test --allow-all tests/ || exit 1
+echo "All checks passed"
+----
+
+[[concatenations-deploy]]
+=== Deployment Pipelines
+
+[source,bash]
+----
+# Build -> Test -> Tag -> Push
+just build && \
+just test && \
+git tag -a v$(date +%Y.%m.%d) -m "Release" && \
+git push origin main --tags
+
+# Container pipeline
+podman build -t chicxulub-ssg:latest . && \
+podman run --rm chicxulub-ssg:latest just test && \
+podman push chicxulub-ssg:latest registry.example.com/chicxulub-ssg:latest
+----
+
+[[concatenations-reporting]]
+=== Reporting Pipelines
+
+[source,bash]
+----
+# Generate full report
+echo "=== Adapter Count ===" && just count-adapters && \
+echo "=== Test Results ===" && just test && \
+echo "=== Coverage ===" && just test-coverage && \
+echo "=== Security ===" && just audit
+
+# JSON report
+deno eval "
+  const adapters = Deno.readDirSync('./adapters');
+  const report = {
+    timestamp: new Date().toISOString(),
+    adapters: [...adapters].filter(f => f.name.endsWith('.js')).length,
+  };
+  console.log(JSON.stringify(report, null, 2));
+"
+----
+
+== Appendix
+
+[[appendix-env]]
+=== Environment Variables
+
+[cols="1,2,1"]
+|===
+|Variable |Description |Default
+
+|`DENO_DIR`
+|Deno cache directory
+|`~/.cache/deno`
+
+|`DENO_VERBOSE`
+|Enable verbose output
+|`0`
+
+|`CI`
+|Running in CI environment
+|unset
+
+|`NO_COLOR`
+|Disable colored output
+|unset
+|===
+
+[[appendix-files]]
+=== Key Files
+
+[cols="1,2"]
+|===
+|File |Purpose
+
+|`justfile`
+|Build automation recipes
+
+|`Mustfile`
+|Required quality gates
+
+|`STATE.scm`
+|Project state tracking
+
+|`META.scm`
+|Architecture decisions
+
+|`PLAYBOOK.scm`
+|Operational runbooks
+
+|`AGENTIC.scm`
+|AI agent patterns
+
+|`NEUROSYM.scm`
+|Reasoning patterns
+|===
