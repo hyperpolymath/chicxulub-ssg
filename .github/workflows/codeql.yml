@@ -54,9 +54,10 @@ jobs:
         shell: bash
         run: |
           echo "Manual build required - add your build commands here"
-          # cargo build --release
-          # mix compile
-          exit 1
+          # For Rust: cargo build --release
+          # For Elixir: mix compile
+          # This step only runs for manual build modes
+          echo "No manual build configured for this language"
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9571571f9a567d8f90f78 # v3.28.0
