@@ -1,214 +1,162 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 Jonathan D.A. Jewell
-= chicxulub--ssg
+= chicxulub-ssg
 :toc: left
 :toclevels: 2
 :icons: font
 :source-highlighter: rouge
 
-Satellite SSG implementation providing MCP-compatible interface to 28 static site generators.
+Pipeline-driven static site generator in Bash. Let pipes connect. Let text transform. Let impact resonate.
 
-== Overview
+== Who Is This For?
 
-chicxulub--ssg is a satellite implementation in the hyperpolymath ecosystem that integrates with the link:https://github.com/hyperpolymath/poly-ssg-mcp[poly-ssg-mcp hub]. It provides adapters for 28 different static site generators via the Model Context Protocol (MCP).
+* **Shell enthusiasts** exploring practical applications of POSIX pipelines
+* **Minimalists** who reject dependency bloat and runtime overhead
+* **Systems administrators** who want SSG without installing language runtimes
+* **Developers** seeking zero-configuration portability across Unix-like systems
+
+== Why chicxulub-ssg?
+
+=== Pipeline Architecture
+
+Content flows through shell pipelines—parsing, transforming, and rendering as composable stages. Each command does one thing well. Chain them together for extinction-level impact.
+
+[source,bash]
+----
+find content -name '*.md' |
+  xargs -I{} sh -c 'parse_frontmatter "$1" | render_template' -- {} |
+  write_output
+----
+
+=== Zero Dependencies
+
+No package managers. No runtimes. No compilation. If you have `/bin/sh`, you have chicxulub-ssg. POSIX compliance means it runs on Linux, macOS, BSD, and any Unix-like system without modification.
+
+=== Text as the Universal Interface
+
+Everything is text. Frontmatter parses to text. Templates render to text. Output writes as text. Shell's native medium becomes the SSG's strength—`sed`, `awk`, and standard utilities are your templating engine.
 
 === Features
 
-* **28 SSG Adapters** - Support for generators in 15+ programming languages
-* **MCP Protocol** - Compatible with Model Context Protocol for AI integration
-* **RSR Compliant** - Follows Rhodium Standard Repository guidelines
-* **Security First** - CodeQL scanning, SHA-pinned actions, secrets detection
-* **Deno Runtime** - Secure-by-default JavaScript/TypeScript execution
+* **Pipeline Processing** — Content flows through composable shell stages
+* **POSIX Portable** — Runs anywhere `/bin/sh` exists
+* **No Runtime** — Zero installation beyond cloning the repository
+* **Text-Native** — Leverage `sed`, `awk`, and Unix text tools directly
+* **MCP Integration** — AI-assistable via link:https://github.com/hyperpolymath/poly-ssg[poly-ssg] satellite architecture
 
 == Quick Start
 
 [source,bash]
 ----
 # Clone the repository
-git clone https://github.com/hyperpolymath/chicxulub--ssg.git
-cd chicxulub--ssg
+git clone https://github.com/hyperpolymath/chicxulub-ssg.git
+cd chicxulub-ssg
 
-# Setup development environment
-just setup
+# Build your site
+./chicxulub build
 
-# Run quality checks
-just qa
+# Watch for changes
+./chicxulub watch
 
-# List available adapters
-just list-adapters
+# Serve locally
+./chicxulub serve
 ----
 
-== Available Adapters
+== Architecture
 
-[cols="1,1,2"]
-|===
-|Adapter |Language |SSG
+[source]
+----
+                    ┌──────────────────────────────────────┐
+                    │           chicxulub-ssg              │
+                    │   Pipeline-driven Bash SSG           │
+                    └──────────────────┬───────────────────┘
+                                       │
+        ┌──────────────────────────────┼──────────────────────────────┐
+        │                              │                              │
+        ▼                              ▼                              ▼
+┌───────────────┐            ┌─────────────────┐            ┌─────────────────┐
+│    PARSE      │     |      │   TRANSFORM     │     |      │     EMIT        │
+│  frontmatter  │ ────────── │   templates     │ ────────── │   write files   │
+│  markdown     │   pipe     │   layouts       │   pipe     │   copy assets   │
+└───────────────┘            └─────────────────┘            └─────────────────┘
+        │                              │                              │
+        └──────────────────────────────┴──────────────────────────────┘
+                                       │
+                              Text streams flow
+                              through each stage
+----
 
-|babashka |Clojure |Babashka
-|cobalt |Rust |Cobalt
-|coleslaw |Common Lisp |Coleslaw
-|cryogen |Clojure |Cryogen
-|documenter |Julia |Documenter.jl
-|ema |Haskell |Ema
-|fornax |F# |Fornax
-|franklin |Julia |Franklin.jl
-|frog |Racket |Frog
-|hakyll |Haskell |Hakyll
-|laika |Scala |Laika
-|marmot |Crystal |Marmot
-|mdbook |Rust |mdBook
-|nimble-publisher |Elixir |NimblePublisher
-|nimrod |Nim |Nimrod
-|orchid |Kotlin |Orchid
-|perun |Clojure |Perun
-|pollen |Racket |Pollen
-|publish |Swift |Publish
-|reggae |D |Reggae
-|scalatex |Scala |ScalaTex
-|serum |Elixir |Serum
-|staticwebpages |Julia |StaticWebPages.jl
-|tableau |Elixir |Tableau
-|wub |Tcl |Wub
-|yocaml |OCaml |YOCaml
-|zola |Rust |Zola
-|zotonic |Erlang |Zotonic
+=== Pipeline Stages
+
+[cols="1,3"]
 |===
+|Stage |Description
+
+|**Parse** |Extract frontmatter, convert Markdown to HTML via standard tools
+|**Transform** |Apply templates, inject content into layouts, process includes
+|**Emit** |Write output files, copy static assets, generate indexes
+|===
+
+== Ecosystem Position
+
+chicxulub-ssg is a satellite in the link:https://github.com/hyperpolymath/poly-ssg[poly-ssg] constellation—one implementation among many language-specific SSGs, each bringing its paradigm's strengths to static site generation.
+
+[source]
+----
+┌─────────────────────────────────────────────────────────────────┐
+│                    poly-ssg (Hub)                               │
+│     Polyglot SSG framework with unified MCP interface           │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+       ┌────────────────────┼────────────────────┐
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│ eclipse-ssg │     │chicxulub-ssg │     │    ...      │
+│   (Pony)    │     │   (Bash)     │     │  satellites │
+│   actors    │     │  pipelines   │     │             │
+└─────────────┘     └──────────────┘     └─────────────┘
+----
 
 == Development
 
 === Prerequisites
 
-* link:https://deno.land[Deno] 1.x or later
-* link:https://github.com/casey/just[Just] command runner
+* POSIX-compliant shell (`/bin/sh`, `bash`, `dash`, `zsh`)
+* link:https://github.com/casey/just[Just] command runner (optional)
 * Git
 
 === Commands
 
 [source,bash]
 ----
-just setup          # Initial setup
-just build          # Check all adapters
-just test           # Run tests
-just lint           # Run linter
-just fmt            # Format code
-just qa             # Run all quality checks
-just list-adapters  # List available adapters
-just verify-adapter <name>  # Verify specific adapter
+just setup    # Initial setup
+just build    # Build site
+just test     # Run tests
+just lint     # Check shell scripts
+just qa       # Run all quality checks
 ----
 
 === Git Hooks
-
-Install development hooks:
 
 [source,bash]
 ----
 ./hooks/install.sh
 ----
 
-Configure in `hooks/config.sh` or create `hooks/config.local.sh` for personal overrides.
-
-== Architecture
-
-=== Adapter Structure
-
-Each adapter follows a consistent pattern:
-
-[source,javascript]
-----
-// SPDX-License-Identifier: MIT
-export const name = "SSG Name";
-export const language = "Language";
-export const description = "Description";
-
-export async function connect() { ... }
-export async function disconnect() { ... }
-export function isConnected() { ... }
-
-export const tools = [
-  {
-    name: "tool_name",
-    description: "What it does",
-    inputSchema: { type: "object", properties: {...} },
-    execute: async (params) => { ... }
-  }
-];
-----
-
-=== Ecosystem Position
-
-[source]
-----
-┌─────────────────────────────────────────────┐
-│           poly-ssg-mcp (Hub)                │
-│  Unified MCP server with all SSG adapters   │
-└─────────────────┬───────────────────────────┘
-                  │
-                  │ synchronizes
-                  ▼
-┌─────────────────────────────────────────────┐
-│         chicxulub--ssg (Satellite)          │
-│   Satellite implementation with 28 adapters │
-└─────────────────────────────────────────────┘
-----
-
-== Configuration Files
-
-[cols="1,3"]
-|===
-|File |Purpose
-
-|`justfile` |Build automation recipes
-|`Mustfile` |Required quality gates
-|`cookbook.adoc` |Comprehensive command reference
-|`META.scm` |Architecture decisions
-|`STATE.scm` |Project state tracking
-|`ECOSYSTEM.scm` |Ecosystem positioning
-|`PLAYBOOK.scm` |Operational runbooks
-|`AGENTIC.scm` |AI agent patterns
-|`NEUROSYM.scm` |Reasoning patterns
-|`ROADMAP.scm` |Development roadmap
-|===
-
 == Contributing
 
 See link:CONTRIBUTING.md[CONTRIBUTING.md] for guidelines.
-
-=== Branch Naming
-
-* `feat/*` - New features
-* `fix/*` - Bug fixes
-* `docs/*` - Documentation
-* `security/*` - Security fixes
-
-=== Commit Messages
-
-Follow link:https://www.conventionalcommits.org[Conventional Commits]:
-
-[source]
-----
-feat(adapters): add new SSG adapter
-fix(zola): correct build path handling
-docs(readme): update installation instructions
-----
 
 == Security
 
 See link:SECURITY.md[SECURITY.md] for vulnerability reporting.
 
-* CodeQL scanning enabled
-* Dependabot updates configured
-* SHA-pinned GitHub Actions
-* SPDX licensing on all files
-
 == License
 
-Dual licensed under MIT OR AGPL-3.0-or-later.
-
-* Adapter files: MIT
-* Infrastructure files: AGPL-3.0-or-later
+AGPL-3.0-or-later
 
 == Links
 
-* link:https://github.com/hyperpolymath/poly-ssg-mcp[poly-ssg-mcp Hub]
-* link:https://github.com/hyperpolymath/rhodium-standard-repositories[RSR Guidelines]
-* link:cookbook.adoc[Cookbook - Command Reference]
+* link:https://github.com/hyperpolymath/poly-ssg[poly-ssg Hub]
+* link:https://github.com/hyperpolymath/poly-mcps[poly-mcps Assembly]
