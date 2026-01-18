@@ -5,9 +5,9 @@
   `((version . "1.0.0")
     (architecture-decisions . ())
     (development-practices
-      ((code-style . "standard")
+      ((code-style . "idiomatic")
        (security . "openssf-scorecard")
        (versioning . "semver")
-       (documentation . "asciidoc")
+       (documentation . "inline")
        (branching . "trunk-based")))
     (design-rationale . ())))

@@ -11,4 +11,4 @@
       ((code-review . "thorough")
        (refactoring . "conservative")))
     (constraints
-      ((banned . ("typescript" "go" "python" "makefile"))))))
+      ((banned . ())))))
